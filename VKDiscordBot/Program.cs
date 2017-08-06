@@ -26,17 +26,22 @@ namespace VKDiscordBot
             var commands = new CommandService();
             commands.Log += logger.Log;
 
-            // Вставить команды 
+            // Команды добавить здесь
 
-            // Вставить сервисы
+            var vk = new VkService("Configurations/Secrets/VkAuthParams.json");
+            vk.Log += logger.Log;
+
+            // Создать сервисы здесь
 
             var services = new ServiceCollection();
-
             services.AddSingleton(data);
             services.AddSingleton(commands);
-            // Добавить сервисы в коллекцию
-            var serviceProvider = services.BuildServiceProvider();
+            services.AddSingleton(vk);
 
+            // Сервисы добавить здесь
+
+            var commandHandler = new CommandHandler(client, services.BuildServiceProvider());
+            client.MessageReceived += commandHandler.HandleCommandAsync;
             await client.LoginAsync(Discord.TokenType.Bot, File.ReadAllText("Configurations/Secrets/Token.txt"));
             await client.StartAsync();
 
