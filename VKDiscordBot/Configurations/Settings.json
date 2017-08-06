@@ -1,0 +1,9 @@
+{
+    "DefaultPrefix":"h!",
+    "LogLevel":5,
+    "MessageCacheSize":80,
+    "DefaultRetryMode":13,
+    "ConnectionTimeout":30000,
+    "HandlerTimeout":3000,
+    "AlwaysDownloadUsers":false
+}
