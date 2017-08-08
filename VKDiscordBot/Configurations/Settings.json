@@ -1,5 +1,5 @@
 {
-    "DefaultPrefix":"h!",
+    "DefaultPrefix":"hx!",
     "LogLevel":5,
     "MessageCacheSize":80,
     "DefaultRetryMode":13,
