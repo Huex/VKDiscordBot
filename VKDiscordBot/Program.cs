@@ -21,6 +21,7 @@ namespace VKDiscordBot
             data.LoadBotSettings("Configurations/Settings.json");
             var logger = new Logger(data.BotSettings.LogLevel);
             data.Log += logger.Log;
+            data.LoadGuildsSettings("Configurations/Guilds/");
             var client = new DiscordSocketClient(data.BotSettings.ToDiscordSocketConfig());
             client.Log += logger.Log;
             var commands = new CommandService();
@@ -37,11 +38,11 @@ namespace VKDiscordBot
             services.AddSingleton(data);
             services.AddSingleton(commands);
             services.AddSingleton(vk);
-
             // Сервисы добавить здесь
 
             var commandHandler = new CommandHandler(client, services.BuildServiceProvider());
             client.MessageReceived += commandHandler.HandleCommandAsync;
+            client.GuildAvailable += data.CheckGuildSettings;
             await client.LoginAsync(Discord.TokenType.Bot, File.ReadAllText("Configurations/Secrets/Token.txt"));
             await client.StartAsync();
 
