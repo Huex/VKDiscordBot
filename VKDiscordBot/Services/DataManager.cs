@@ -55,7 +55,7 @@ namespace VKDiscordBot.Services
             {
                 var settings = new GuildSettings
                 {
-                    Prefix = "hx!",
+                    Prefix = BotSettings.DefaultPrefix,
                     GuildId = guild.Id,
                     Name = guild.Name,
                     Notifys = new List<Notify>()
