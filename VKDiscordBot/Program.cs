@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using VKDiscordBot.Models;
+using VKDiscordBot.Modules;
 using VKDiscordBot.Services;
 
 namespace VKDiscordBot
@@ -30,6 +31,7 @@ namespace VKDiscordBot
             var commands = new CommandService();
             commands.Log += logger.Log;
 
+            await commands.AddModuleAsync<SettingsModule>();
             // Команды добавить здесь
 
             var vk = new VkService("Configurations/Secrets/VkAuthParams.json");

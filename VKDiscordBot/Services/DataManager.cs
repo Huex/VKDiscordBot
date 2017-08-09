@@ -45,7 +45,7 @@ namespace VKDiscordBot.Services
             }
             catch (Exception exp)
             {
-                RaiseLog(LogSeverity.Critical, "Error of reading servers settings", exp);
+                RaiseLog(LogSeverity.Critical, "Error of reading guilds settings", exp);
             }
         }
 
@@ -64,6 +64,64 @@ namespace VKDiscordBot.Services
                 WriteGuildSettings(settings);
             }
             return Task.CompletedTask;
+        }
+
+        public bool SetServerPrefix(IGuild guild, string prefix)
+        {
+            var path = GUILDS_SETTINGS_PATH + guild.Id + ".json";
+            var neededServer = GuildsSettings.Find(s => s.GuildId == guild.Id);
+            if (neededServer != null)
+            {
+                neededServer.Prefix = prefix;
+                var res = UpdateServerSettings(neededServer);
+                return res;
+            }
+            else
+            {
+                RaiseLog(LogSeverity.Warning, $"Guild settings not exist: {guild.Id}");
+                return false;
+            }
+        }
+
+        private bool UpdateServerSettings(GuildSettings serverSettings)
+        {
+            try
+            {
+                if (WriteGuildSettings(serverSettings))
+                {
+                    var neededServer = GuildsSettings.Find(s => s.GuildId == serverSettings.GuildId);
+                    if (neededServer != null)
+                    {
+                        GuildsSettings[GuildsSettings.IndexOf(neededServer)] = serverSettings;
+                        RaiseLog(LogSeverity.Verbose, $"Guild settings successfully update: {serverSettings.GuildId}");
+                        return true;
+                    }
+                    else
+                    {
+                        RaiseLog(LogSeverity.Warning, $"Guild settings {serverSettings.GuildId} not exist");
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception exp)
+            {
+                RaiseLog(LogSeverity.Error, $"Guild settings FAIL update: {serverSettings.GuildId}", exp);
+                return false;
+            }
+        }
+
+        public string GetGuildPrefix(IGuild guild)
+        {
+            return GuildsSettings.Find(s => s.GuildId == guild.Id).Prefix;
+        }
+
+        public string GetGuildPrefix(ulong guildId)
+        {
+            return GuildsSettings.Find(s => s.GuildId == guildId).Prefix;
         }
 
         private bool WriteGuildSettings(GuildSettings settings)
