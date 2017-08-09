@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using VKDiscordBot.Models;
 using VKDiscordBot.Services;
 
 namespace VKDiscordBot
@@ -24,6 +25,7 @@ namespace VKDiscordBot
             data.LoadGuildsSettings("Configurations/Guilds/");
             var client = new DiscordSocketClient(data.BotSettings.ToDiscordSocketConfig());
             client.Log += logger.Log;
+            var tasker = new Tasker();
             var commands = new CommandService();
             commands.Log += logger.Log;
 
@@ -38,6 +40,8 @@ namespace VKDiscordBot
             services.AddSingleton(data);
             services.AddSingleton(commands);
             services.AddSingleton(vk);
+            services.AddSingleton(tasker);
+
             // Сервисы добавить здесь
 
             var commandHandler = new CommandHandler(client, services.BuildServiceProvider());
