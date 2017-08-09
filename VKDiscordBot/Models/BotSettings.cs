@@ -9,6 +9,7 @@ namespace VKDiscordBot.Models
     public class BotSettings
     {
         public string DefaultPrefix { get; set; }
+        public int WaitingBeforeDeleteMessage { get; set; }
         public LogSeverity LogLevel { get; set; }
         public int MessageCacheSize { get; set; }
         public RetryMode DefaultRetryMode { get; set; }

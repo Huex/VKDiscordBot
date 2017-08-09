@@ -1,9 +1,10 @@
 {
-    "DefaultPrefix":"hx!",
-    "LogLevel":5,
-    "MessageCacheSize":80,
-    "DefaultRetryMode":13,
-    "ConnectionTimeout":30000,
-    "HandlerTimeout":3000,
-    "AlwaysDownloadUsers":false
+  "DefaultPrefix": "hx!",
+  "WaitingBeforeDeleteMessage": 5000,
+  "LogLevel": 5,
+  "MessageCacheSize": 80,
+  "DefaultRetryMode": 13,
+  "ConnectionTimeout": 30000,
+  "HandlerTimeout": 3000,
+  "AlwaysDownloadUsers": false
 }
