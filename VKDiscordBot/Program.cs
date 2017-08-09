@@ -26,6 +26,7 @@ namespace VKDiscordBot
             var client = new DiscordSocketClient(data.BotSettings.ToDiscordSocketConfig());
             client.Log += logger.Log;
             var tasker = new Tasker();
+            tasker.Log += logger.Log;
             var commands = new CommandService();
             commands.Log += logger.Log;
 
