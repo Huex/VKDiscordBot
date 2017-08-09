@@ -22,39 +22,40 @@ namespace VKDiscordBot
             _random = new Random();
         }
 
-        public async Task HandleCommandAsync(SocketMessage arg)
+        public Task HandleCommandAsync(SocketMessage arg)
         {
             var msg = arg as SocketUserMessage;
             if (msg == null || msg?.Source != MessageSource.User)
             {
-                return;
+                return Task.CompletedTask;
             }
             var guild = (new SocketCommandContext(_client, msg)).Guild;
             if (guild != null)
             {
-                var data = (DataManager)_services.GetService(typeof(DataManager));
-                await ProcessCommandAsync(data.BotSettings.DefaultPrefix, msg);
+                var prefix = ((DataManager)_services.GetService(typeof(DataManager))).GuildsSettings.Find(g=>g.GuildId == guild.Id).Prefix;
+                int prefixInt = prefix.Length - 1;
+                if (msg.HasStringPrefix(prefix, ref prefixInt) || msg.HasMentionPrefix(_client.CurrentUser, ref prefixInt))
+                {                   
+                    ProcessCommandAsync(prefixInt, msg).ConfigureAwait(false);
+                }
             }
+            return Task.CompletedTask;
         }
 
-        public async Task ProcessCommandAsync(string prefix, SocketUserMessage message)
+        public async Task ProcessCommandAsync(int prefixInt, SocketUserMessage message)
         {
-            int prefixInt = prefix.Length - 1;
-            if (message.HasStringPrefix(prefix, ref prefixInt) || message.HasMentionPrefix(_client.CurrentUser, ref prefixInt))
+            var context = new SocketCommandContext(_client, message);
+            var commands = (CommandService)_services.GetService(typeof(CommandService));
+            await message.Channel.TriggerTypingAsync();
+            var result = await commands.ExecuteAsync(context, prefixInt, _services);
+            if (!result.IsSuccess)
             {
-                await message.Channel.TriggerTypingAsync();
-                var context = new SocketCommandContext(_client, message);
-                var commands = (CommandService)_services.GetService(typeof(CommandService));
-                var result = await commands.ExecuteAsync(context, prefixInt, _services);
-                if (!result.IsSuccess)
+                List<GuildEmote> emotes = new List<GuildEmote>(context.Guild.Emotes);
+                if (emotes.Count != 0)
                 {
-                    List<GuildEmote> emotes = new List<GuildEmote>(context.Guild.Emotes);
-                    if (emotes.Count != 0)
-                    {
-                        await message.AddReactionAsync(emotes[_random.Next(0, emotes.Count - 1)]);
-                    }
-                    await message.AddReactionAsync(new Emoji("❔"));
+                    await message.AddReactionAsync(emotes[_random.Next(0, emotes.Count - 1)]);
                 }
+                await message.AddReactionAsync(new Emoji("❔"));
             }
         }
     }
