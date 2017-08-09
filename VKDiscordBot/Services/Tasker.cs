@@ -6,7 +6,7 @@ using VKDiscordBot.Models;
 
 namespace VKDiscordBot.Services
 {
-    public class Tasker
+    public class Tasker : BotServiceBase
     {
         private List<RepetitiveTask> _tasks;
 
@@ -18,11 +18,12 @@ namespace VKDiscordBot.Services
         public void Add(RepetitiveTask task)
         {
             _tasks.Add(task);
+            RaiseLog(Discord.LogSeverity.Verbose, $"Added new repetitive task: {task.Id}");
         }
 
         public void AddAndStart(RepetitiveTask task)
         {
-            _tasks.Add(task);
+            Add(task);
             task.Start();
         }
 
