@@ -8,19 +8,27 @@ namespace VKDiscordBot.Models
 {
     public class RepetitiveTask
     {
-        public Task Action { get; private set; }
+        public Action Action { get; private set; }
         public int DueTime { get; private set; }
         public int Period { get; private set; }
+        public int Id
+        {
+            get
+            {
+                return _timer.GetHashCode();
+            }
+        }
 
         private Timer _timer;
 
-        public RepetitiveTask(Task task, int dueTime, int period)
+        public RepetitiveTask(Action action, int dueTime, int period)
         {
             DueTime = dueTime;
             Period = period;
+            Action = action;
             _timer = new Timer((sender) =>
             {
-                Action.Start();
+                Task.Factory.StartNew(action);
             }, null, Timeout.Infinite, Timeout.Infinite);
                       
         }
