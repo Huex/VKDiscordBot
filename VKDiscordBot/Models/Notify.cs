@@ -17,25 +17,26 @@ namespace VKDiscordBot.Models
         public string Domain { get; set; }
         public ulong ChannelId { get; set; }
         public DateTime LastCheck { get; set; }
-        public DateTime LastSentPublication { get; set; }
+        public DateTime LastSent { get; set; }
+        public string Comment { get; set; }
 
-        private ushort _postsPerNotify;
-        public ushort PostsPerNotify
+        private ushort _sendsPerNotify;
+        public ushort SendsPerNotify
         {
             get
             {
-                return _postsPerNotify;
+                return _sendsPerNotify;
             }
             set
             {
-                _postsPerNotify = value;
-                if (_postsPerNotify > MaxPostsPerNotify)
+                _sendsPerNotify = value;
+                if (_sendsPerNotify > MaxPostsPerNotify)
                 {
-                    _postsPerNotify = MaxPostsPerNotify;
+                    _sendsPerNotify = MaxPostsPerNotify;
                 }
-                if (_postsPerNotify < MinPostsPerNotify)
+                if (_sendsPerNotify < MinPostsPerNotify)
                 {
-                    _postsPerNotify = MinPostsPerNotify;
+                    _sendsPerNotify = MinPostsPerNotify;
                 }
             }
         }

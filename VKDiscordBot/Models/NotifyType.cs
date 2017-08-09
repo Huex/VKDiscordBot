@@ -6,7 +6,7 @@ namespace VKDiscordBot.Models
 {
     public enum NotifyType
     {
-        Community = 0,
-        Global = 1
+        Wall = 0,
+        NewsFeed = 1
     }
 }
