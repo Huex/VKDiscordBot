@@ -10,7 +10,7 @@ namespace VKDiscordBot.Models
         public const ushort MinPostsPerNotify = 1;
 
         public const ushort MaxUpdatePeriod = 60 * 24;
-        public const ushort MinUpdatePeriod = 1;
+        public const ushort MinUpdatePeriod = 3;
 
         public NotifyType Type { get; set; }
         public string SearchString { get; set; }
