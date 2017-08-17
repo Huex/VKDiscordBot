@@ -40,6 +40,7 @@ namespace VKDiscordBot
             await vk.AuthorizeAsync();
             var notify = new NotifyService(client, vk, tasker, data);
             notify.Log += logger.Log;
+            notify.AddGuildsNotifys();
             // Создать сервисы здесь
 
             var services = new ServiceCollection();
@@ -56,7 +57,7 @@ namespace VKDiscordBot
             client.GuildAvailable += data.CheckGuildSettings;
             client.Ready += () =>
             {
-                notify.StartGuildsNotifys();
+                notify.StartAsync().ConfigureAwait(false);
                 return Task.CompletedTask;
             };
             await client.LoginAsync(Discord.TokenType.Bot, File.ReadAllText("Configurations/Secrets/Token.txt"));

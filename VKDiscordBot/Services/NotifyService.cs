@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using VKDiscordBot.Models;
 using VkNet.Model;
@@ -13,6 +14,7 @@ namespace VKDiscordBot.Services
     {
         public const int TaskDueTime = 3000;
         public const int NotifyDelay = 5000;
+        public const int StartNotifyDelay = 5000;
         private const int MillicesondsInMinute = 60 * 1000;
 
         private readonly VkService _vk;
@@ -20,12 +22,15 @@ namespace VKDiscordBot.Services
         private readonly DiscordSocketClient _client;
         private readonly DataManager _data;
 
+        private Collection<int> TasksIds;
+
         public NotifyService(DiscordSocketClient client, VkService vk, TaskManager tasker, DataManager data)
         {
             _vk = vk;
             _tasker = tasker;
             _client = client;
             _data = data;
+            TasksIds = new Collection<int>();
         }
 
         internal void AddNotify(ulong GuildId, Notify notify)
@@ -57,7 +62,7 @@ namespace VKDiscordBot.Services
             }
         }
 
-        public void StartGuildsNotifys()
+        public void AddGuildsNotifys()
         {
             foreach (var guild in _data.GuildsSettings)
             {
@@ -65,7 +70,7 @@ namespace VKDiscordBot.Services
                 {
                     if (notify.Type == NotifyType.Wall)
                     {
-                        _tasker.AddAndStart(new RepetitiveTask(() =>
+                        var task = new RepetitiveTask(() =>
                         {
                             var posts = CheckWallPosts(notify);
                             if (posts.Count != 0)
@@ -77,10 +82,21 @@ namespace VKDiscordBot.Services
                                 notify.LastSent = (DateTime)newLastSent;
                                 _data.UpdateGuildSettings(guild);
                             }
-                        }, TaskDueTime, notify.UpdatePeriod * MillicesondsInMinute));
+                        }, TaskDueTime, notify.UpdatePeriod * MillicesondsInMinute);
+                        TasksIds.Add(task.Id);
+                        _tasker.Add(task);
                         RaiseLog(LogSeverity.Debug, $"Added notify task. GuildId={guild.GuildId}");
                     }
                 }
+            }           
+        }
+
+        public async Task StartAsync()
+        {
+            foreach (var task in TasksIds)
+            {
+                _tasker.Find(t => t.Id == task).Start();
+                await Task.Delay(StartNotifyDelay);
             }
         }
 
