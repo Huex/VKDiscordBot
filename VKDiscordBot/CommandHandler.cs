@@ -49,13 +49,15 @@ namespace VKDiscordBot
             await message.Channel.TriggerTypingAsync();
             var result = await commands.ExecuteAsync(context, prefixInt, _services);
             if (!result.IsSuccess)
-            {
-                List<GuildEmote> emotes = new List<GuildEmote>(context.Guild.Emotes);
-                if (emotes.Count != 0)
+            {           
+                await message.AddReactionAsync(new Emoji("❔")).ContinueWith(async (s) =>
                 {
-                    await message.AddReactionAsync(emotes[_random.Next(0, emotes.Count - 1)]);
-                }
-                await message.AddReactionAsync(new Emoji("❔"));
+                    List<GuildEmote> emotes = new List<GuildEmote>(context.Guild.Emotes);
+                    if (emotes.Count != 0)
+                    {
+                        await message.AddReactionAsync(emotes[_random.Next(0, emotes.Count - 1)]);
+                    }
+                });
             }
         }
     }
