@@ -33,7 +33,7 @@ namespace VKDiscordBot.Services
                     var serverSettings = (GuildSettings)JsonConvert.DeserializeObject(File.ReadAllText(filePath), typeof(GuildSettings));
                     if (serverSettings == null)
                     {
-                        RaiseLog(LogSeverity.Warning, $"Can not read guild settings: {filePath}");
+                        RaiseLog(LogSeverity.Warning, $"Can not read guild settings. Path={filePath}");
                     }
                     else
                     {
@@ -41,7 +41,7 @@ namespace VKDiscordBot.Services
                     }
                 }
                 GuildsSettings = guildsSettings;
-                RaiseLog(LogSeverity.Info, "Guilds settings readed");
+                RaiseLog(LogSeverity.Info, $"Guilds settings readed. Path={path}");
             }
             catch (Exception exp)
             {
@@ -66,51 +66,41 @@ namespace VKDiscordBot.Services
             return Task.CompletedTask;
         }
 
-        public bool SetServerPrefix(IGuild guild, string prefix)
+        public void SetServerPrefix(IGuild guild, string prefix)
         {
             var path = GUILDS_SETTINGS_PATH + guild.Id + ".json";
             var neededServer = GuildsSettings.Find(s => s.GuildId == guild.Id);
             if (neededServer != null)
             {
                 neededServer.Prefix = prefix;
-                var res = UpdateServerSettings(neededServer);
-                return res;
+                UpdateGuildSettings(neededServer);
             }
             else
             {
-                RaiseLog(LogSeverity.Warning, $"Guild settings not exist: {guild.Id}");
-                return false;
+                RaiseLog(LogSeverity.Warning, $"Guild settings not exist. GuildId={guild.Id}");
             }
         }
 
-        private bool UpdateServerSettings(GuildSettings serverSettings)
+        internal void UpdateGuildSettings(GuildSettings serverSettings)
         {
             try
             {
-                if (WriteGuildSettings(serverSettings))
+                var neededServer = GuildsSettings.Find(s => s.GuildId == serverSettings.GuildId);
+                if (neededServer != null)
                 {
-                    var neededServer = GuildsSettings.Find(s => s.GuildId == serverSettings.GuildId);
-                    if (neededServer != null)
-                    {
-                        GuildsSettings[GuildsSettings.IndexOf(neededServer)] = serverSettings;
-                        RaiseLog(LogSeverity.Verbose, $"Guild settings successfully update: {serverSettings.GuildId}");
-                        return true;
-                    }
-                    else
-                    {
-                        RaiseLog(LogSeverity.Warning, $"Guild settings {serverSettings.GuildId} not exist");
-                        return false;
-                    }
+                    GuildsSettings[GuildsSettings.IndexOf(neededServer)] = serverSettings;
+                    RaiseLog(LogSeverity.Verbose, $"Guild settings update. GuildId={serverSettings.GuildId}");
                 }
                 else
                 {
-                    return false;
+                    RaiseLog(LogSeverity.Warning, $"Guild settings not exist. GuildId={serverSettings.GuildId}");
+                    return;
                 }
+                WriteGuildSettings(serverSettings);
             }
             catch (Exception exp)
             {
-                RaiseLog(LogSeverity.Error, $"Guild settings FAIL update: {serverSettings.GuildId}", exp);
-                return false;
+                RaiseLog(LogSeverity.Error, $"Guild settings FAIL update. GuildId={serverSettings.GuildId}", exp);
             }
         }
 
@@ -124,18 +114,16 @@ namespace VKDiscordBot.Services
             return GuildsSettings.Find(s => s.GuildId == guildId).Prefix;
         }
 
-        private bool WriteGuildSettings(GuildSettings settings)
+        private void WriteGuildSettings(GuildSettings settings)
         {
             try
             {
                 File.WriteAllText(GUILDS_SETTINGS_PATH + settings.GuildId + ".json", JsonConvert.SerializeObject(settings));
-                RaiseLog(LogSeverity.Info, $"Guild settings successfully write: {settings.GuildId}");
-                return true;
+                RaiseLog(LogSeverity.Info, $"Guild settings successfully write. GuildId={settings.GuildId}");
             }
             catch (Exception exp)
             {
-                RaiseLog(LogSeverity.Error, $"Guild settings FAIL write: {settings.GuildId}", exp);
-                return false;
+                RaiseLog(LogSeverity.Error, $"Guild settings FAIL write. GuildId={settings.GuildId}", exp);
             }
         }
     }
