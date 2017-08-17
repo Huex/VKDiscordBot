@@ -20,29 +20,21 @@ namespace VKDiscordBot.Modules
         }
 
         [Name("Prefix"), Command("prefix"), Alias("pref")]
+        [Summary("Sets the prefix for the bot commands on the current server")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task PrefixAsync(string prefix)
         {
-            if (_data.SetServerPrefix(Context.Guild, prefix))
+            _data.SetServerPrefix(Context.Guild, prefix);
+            var message = await ReplyAsync("", false, new EmbedBuilder
             {
-                var message = await ReplyAsync("", false, new EmbedBuilder
-                {
-                    Color = Color.Green,
-                    Description = $"Prefix `{prefix}` installed",
-                });
-                new Timer((s) => { message.DeleteAsync(); }, null, _data.BotSettings.WaitingBeforeDeleteMessage, Timeout.Infinite);
-            }
-            else
-            {
-                await ReplyAsync("", false, new EmbedBuilder
-                {
-                    Color = Color.Red,
-                    Description = $"Error prefix `{prefix}` not installed",
-                });
-            }
+                Color = Color.Green,
+                Description = $"Prefix `{prefix}` installed",
+            });
+            new Timer((s) => message.DeleteAsync(), null, _data.BotSettings.WaitingBeforeDeleteMessage, Timeout.Infinite);
         }
 
         [Name("Prefix"), Command("prefix"), Alias("pref")]
+        [Summary("Displays the current prefix on the server")]
         public async Task PrefixAsync()
         {
             await ReplyAsync("", false, new EmbedBuilder
