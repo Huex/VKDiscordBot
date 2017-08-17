@@ -1,10 +1,14 @@
-﻿using Newtonsoft.Json;
+﻿using Discord;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using VkNet;
+using VkNet.Enums.Filters;
+using VkNet.Model;
+using VkNet.Model.RequestParams;
 using VkNet.Utils.AntiCaptcha;
 
 namespace VKDiscordBot.Services
@@ -13,12 +17,13 @@ namespace VKDiscordBot.Services
     {
         private readonly VkApi _vkApi;
         private readonly string _pathToAuthParams;
+        public readonly string Domain = "https://vk.com/";
 
         public VkService(string pathToAuthParams)
         {
             _pathToAuthParams = pathToAuthParams;
             _vkApi = new VkApi();
-            RaiseLog(Discord.LogSeverity.Verbose, "Ready");
+            _vkApi.RequestsPerSecond = 10;
         }
 
         public bool IsAuthorized
@@ -27,6 +32,42 @@ namespace VKDiscordBot.Services
             {
                return _vkApi.IsAuthorized;
             }
+        }
+
+        public List<Post> GetWallPosts(WallGetParams prms)
+        {
+            RaiseLog(LogSeverity.Debug, "GetWallPosts request");
+            return new List<Post>(_vkApi.Wall.Get(prms).WallPosts);
+        }
+
+        public List<NewsSearchResult> NewsFeedSearch(NewsFeedSearchParams prms)
+        {
+            RaiseLog(LogSeverity.Debug, "NewsFeedSearch request");
+            return new List<NewsSearchResult>(_vkApi.NewsFeed.Search(prms));
+        }
+
+        public List<Post> WallPostsSearch(WallSearchParams prms)
+        {
+            RaiseLog(LogSeverity.Debug, "WallPostsSearch request");
+            return new List<Post>(_vkApi.Wall.Search(prms));
+        }
+
+        public User GetUser(long id, ProfileFields fields)
+        {
+            RaiseLog(LogSeverity.Debug, "GetUser request");
+            return _vkApi.Users.Get(id, fields);
+        }
+
+        public Group GetGroup(long id, GroupsFields fields)
+        {
+            RaiseLog(LogSeverity.Debug, "GetGroup request");
+            return _vkApi.Groups.GetById(new string[] { id.ToString() }, id.ToString(), fields)[0]; 
+        }
+
+        public VkObject ResolveScreeName(string screeName)
+        {
+            RaiseLog(LogSeverity.Debug, "ResolveScreeName request");
+            return _vkApi.Utils.ResolveScreenName(screeName);
         }
 
         public async Task AuthorizeAsync()
