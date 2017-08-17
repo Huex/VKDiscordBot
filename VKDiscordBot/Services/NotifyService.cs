@@ -9,7 +9,7 @@ using VkNet.Model.RequestParams;
 
 namespace VKDiscordBot.Services
 {
-    internal class NotifyService : BotServiceBase
+    public class NotifyService : BotServiceBase
     {
         public const int TaskDueTime = 3000;
         public const int NotifyDelay = 5000;
@@ -26,6 +26,35 @@ namespace VKDiscordBot.Services
             _tasker = tasker;
             _client = client;
             _data = data;
+        }
+
+        internal void AddNotify(ulong GuildId, Notify notify)
+        {
+            var guild = _data.GuildsSettings.Find(g => g.GuildId == GuildId);
+            if(guild != null)
+            {
+                guild.Notifys.Add(notify);
+                var notifyIndex = guild.Notifys.IndexOf(notify);
+                _tasker.AddAndStart(new RepetitiveTask(() =>
+                {
+                    var posts = CheckWallPosts(guild.Notifys[notifyIndex]);
+                    if (posts.Count != 0)
+                    {
+                        NotifyPosts(posts, guild.Notifys[notifyIndex]);
+                        DateTime? newLastSent = guild.Notifys[notifyIndex].LastSent;
+                        posts.ForEach((post) => newLastSent = newLastSent < post.Date ? post.Date : newLastSent);
+                        guild.Notifys[notifyIndex].LastCheck = DateTime.Now;
+                        guild.Notifys[notifyIndex].LastSent = (DateTime)newLastSent;
+                        _data.UpdateGuildSettings(guild);
+                    }
+                }, TaskDueTime, guild.Notifys[notifyIndex].UpdatePeriod * MillicesondsInMinute));
+                RaiseLog(LogSeverity.Debug, $"Added notify task. GuildId={guild.GuildId}");
+                _data.UpdateGuildSettings(guild);
+            }
+            else
+            {
+                RaiseLog(LogSeverity.Error, $"Guild not found. GuildId={GuildId}");
+            }
         }
 
         public void StartGuildsNotifys()

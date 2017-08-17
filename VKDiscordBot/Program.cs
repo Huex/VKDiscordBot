@@ -32,13 +32,14 @@ namespace VKDiscordBot
             commands.Log += logger.Log;
 
             await commands.AddModuleAsync<SettingsModule>();
+            await commands.AddModuleAsync<NotifyModule>();
             // Команды добавить здесь
 
             var vk = new VkService("Configurations/Secrets/VkAuthParams.json");
             vk.Log += logger.Log;
             await vk.AuthorizeAsync();
             var notify = new NotifyService(client, vk, tasker, data);
-
+            notify.Log += logger.Log;
             // Создать сервисы здесь
 
             var services = new ServiceCollection();
@@ -46,6 +47,7 @@ namespace VKDiscordBot
             services.AddSingleton(commands);
             services.AddSingleton(vk);
             services.AddSingleton(tasker);
+            services.AddSingleton(notify);
 
             // Сервисы добавить здесь
 
