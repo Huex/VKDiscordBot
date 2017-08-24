@@ -6,6 +6,7 @@ using Discord.WebSocket;
 using VKDiscordBot.Models;
 using VkNet.Enums.SafetyEnums;
 using VkNet.Model;
+using VkNet.Model.Attachments;
 using VkNet.Model.RequestParams;
 
 namespace VKDiscordBot.Services
@@ -135,12 +136,24 @@ namespace VKDiscordBot.Services
 		{
 			var needMessageCount = (int)Math.Ceiling((double)text.Length / DataManager.BotSettings.MessageTextLimit);
 			var blockLength = text.Length / needMessageCount;
-			string[] textBlocks = new string[text.Length / blockLength + 1];
+			string[] textBlocks = new string[needMessageCount];
 			for (int i = 0,j=0; i < text.Length && j < needMessageCount; i += blockLength,j++)
 			{
 				textBlocks[j] = (text.Substring(i, text.Length - i > blockLength ? blockLength : text.Length - i));
 			}
 			return textBlocks;
+		}
+
+		private Uri GetMaxImageUri(Photo photo)
+		{
+			var uri = new Uri("Error: Can not get photo uri :c");
+			uri = photo.Photo75 ?? uri;
+			uri = photo.Photo130 ?? uri;
+			uri = photo.Photo604 ?? uri;
+			uri = photo.Photo807 ?? uri;
+			uri = photo.Photo1280 ?? uri;
+			uri = photo.Photo2560 ?? uri;
+			return uri;
 		}
 
 		//TODO: доделать мг
@@ -171,12 +184,54 @@ namespace VKDiscordBot.Services
 						}
 						attachments[attach.Type].Add(attach.Instance);
 					}
-					
-					foreach (var textBlock in ToDivide(post.Text, DataManager.BotSettings.MessageTextLimit))
+
+					if (notify.WithText)
 					{
-						channel.SendMessageAsync(textBlock).Wait();
-						Task.Delay(DataManager.BotSettings.SentTextDelay).Wait();
+						foreach (var textBlock in ToDivide(post.Text, DataManager.BotSettings.MessageTextLimit))
+						{
+							channel.SendMessageAsync(textBlock).Wait();
+							Task.Delay(DataManager.BotSettings.SentTextDelay).Wait();
+						}
 					}
+
+					if (notify.WithPhoto)
+					{
+						if (attachments.ContainsKey(typeof(Photo)))
+						{
+							string[] links = new string[attachments[typeof(Photo)].Count];
+							int index = 0;
+							foreach(Photo photo in attachments[typeof(Photo)])
+							{
+								links[index] = GetMaxImageUri(photo).ToString();
+								index++;
+							}
+							if(links.Length <= 5)
+							{
+								channel.SendMessageAsync(String.Join(Environment.NewLine, links)).Wait();
+							}
+							else
+							{
+								string[] firstmsg = new string[5];
+								string[] secondmsg = new string[links.Length - 5];
+								for(int i = 0; i< links.Length; i++)
+								{
+									if (i < 5)
+									{
+										firstmsg[i] = links[i];
+									}
+									else
+									{
+										secondmsg[i - 5] = links[i];
+									}
+								}
+								channel.SendMessageAsync(String.Join(Environment.NewLine, firstmsg)).Wait();
+								Task.Delay(DataManager.BotSettings.BetweenSentPhotosDelay).Wait();
+								channel.SendMessageAsync(String.Join(Environment.NewLine, secondmsg)).Wait();
+							}
+							Task.Delay(DataManager.BotSettings.BeforePhotoDelay).Wait();
+						}
+					}
+
 
 					//var links = GetLinks(post.Attachments);
 					//if (links.Count <= 5)
