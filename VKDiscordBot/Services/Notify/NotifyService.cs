@@ -34,7 +34,7 @@ namespace VKDiscordBot.Services
             {
 				var guild = _data.GetGuildSettings(guildId);
 				guild.Notifys.Add(notify);
-				AddNotifyTaskAndStart(guild, notify);				
+				AddNotifyTask(guild, notify);				
 				_data.UpdateGuildSettings(guild.GuildId, guild);
             }
             else
@@ -43,7 +43,7 @@ namespace VKDiscordBot.Services
             }
         }
 
-		private void AddNotifyTaskAndStart(GuildSettings guild, Notify notify)
+		private void AddNotifyTask(GuildSettings guild, Notify notify)
 		{
 			var notifyHashCode = guild.Notifys[guild.Notifys.IndexOf(notify)].GetHashCode();
 			var task = new NotifyTask(() =>
@@ -77,7 +77,6 @@ namespace VKDiscordBot.Services
 				RaiseLog(severety, $"Notify task ended. TaslId={id} Resulr={result.ToString()}");
 			};
 			_notifys.Add(task);
-			_notifys[_notifys.IndexOf(task)].Start();
 			RaiseLog(LogSeverity.Debug, $"Added notify task. GuildId={guild.GuildId}");
 		}
 
@@ -87,7 +86,7 @@ namespace VKDiscordBot.Services
 			{
 				foreach (var notify in guild.Notifys)
 				{
-					AddNotifyTaskAndStart(guild, notify);
+					AddNotifyTask(guild, notify);
 				}
 			}
 		}
