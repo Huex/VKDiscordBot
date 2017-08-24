@@ -22,10 +22,13 @@ namespace VKDiscordBot.Models
 		public int SentNotifyDelay { get; set; }
 		public int StartNotifyDelay { get; set; }
 		public int SentTextDelay { get; set; }
+		public int BetweenSentPhotosDelay { get; internal set; }
+		public int BeforePhotoDelay { get; internal set; }
 		public int MessageTextLimit { get; set; }
 
 		public int DefaultUpdatePeriod { get; set; }
 		public int DefaultSentPostsCount { get; set; }
+
 
 		public DiscordSocketConfig DiscordSocketConfig()
         {
