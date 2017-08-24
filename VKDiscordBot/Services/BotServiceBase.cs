@@ -1,10 +1,10 @@
-﻿using Discord;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Discord;
 
 namespace VKDiscordBot.Services
 {
-    public abstract class BotServiceBase
+	public abstract class BotServiceBase
     {
         public event Func<LogMessage, Task> Log;
 
