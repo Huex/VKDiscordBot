@@ -111,7 +111,14 @@ namespace VKDiscordBot.Modules
 					UpdatePeriod = Convert.ToUInt16(period),
 					Type = NotifyType.Wall,
 					WithHeader = true,
-					Hidden = false
+					Hidden = false,
+					WithAudio = true,
+					WithDocument = true,
+					WithMap = true,
+					WithPhoto = true,
+					WithPool = true,
+					WithText = true,
+					WithVideo = true
 				}
             });
 

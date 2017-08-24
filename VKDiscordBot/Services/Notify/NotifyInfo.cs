@@ -18,6 +18,14 @@ namespace VKDiscordBot.Models
 		public ulong ChannelId { get; set; }
 		public string Comment { get; set; }
 		public bool WithHeader { get; set; }
+		public bool WithText { get; set; }
+		public bool WithPhoto { get; set; }
+		public bool WithAudio { get; set; }
+		public bool WithVideo { get; set; }
+		public bool WithDocument { get; set; }
+		public bool WithMap { get; set; }
+		public bool WithPool { get; set; }
+
 		public bool Hidden { get; set; }
 		private ushort _sendsPerNotify;
 		public ushort SendsPerNotify
