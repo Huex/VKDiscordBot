@@ -1,19 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace VKDiscordBot.Models
 {
-    public class RepetitiveTask
+	public class RepetitiveTask
     {
-        /// <summary>
-        /// Возвращает id повторяющиеся задачи RepetitiveTask
-        /// </summary>
         public event Action<int> TaskStarted;
 
-        public event Action<TaskStatus> TaskEnded;
+        public event Action<int, TaskStatus> TaskEnded;
 
         public Action Action { get; private set; }
 
@@ -40,7 +35,7 @@ namespace VKDiscordBot.Models
             Period = period;
             Action = action;
             TaskStarted += (id) => State = RepeririveTaskState.TaskStarted;
-            TaskEnded += (status) =>
+            TaskEnded += (id, status) =>
             {
                 if (State != RepeririveTaskState.TimerStopped)
                 {
@@ -52,7 +47,7 @@ namespace VKDiscordBot.Models
                 TaskStarted?.Invoke(Id);
                 Task.Factory.StartNew(action).ContinueWith((s) => 
                 {
-                    TaskEnded?.Invoke(s.Status);
+                    TaskEnded?.Invoke(s.Id,s.Status);
                 });
             }, null, Timeout.Infinite, Timeout.Infinite);                      
         }
