@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace VKDiscordBot.Models
 {
-    public class GuildSettings
+	public class GuildSettings
     {
         public string Name { get; set; }
         public ulong GuildId { get; set; }

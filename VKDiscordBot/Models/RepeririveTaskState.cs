@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace VKDiscordBot.Models
+﻿namespace VKDiscordBot.Models
 {
-    public enum RepeririveTaskState
+	public enum RepeririveTaskState
     {
         TimerStopped = 0,
         WaitingTimerTrip = 1,
