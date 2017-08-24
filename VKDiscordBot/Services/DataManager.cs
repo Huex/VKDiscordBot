@@ -55,7 +55,7 @@ namespace VKDiscordBot.Services
 
 		public void AddGuildSettings(GuildSettings guildSettings)
 		{
-			if(_guildsSettings.Find(g=>g.GuildId == guildSettings.GuildId) != null)
+			if(!GuildSettingsExist(guildSettings.GuildId))
 			{
 				_guildsSettings.Add(guildSettings);
 				WriteGuildSettings(guildSettings);
