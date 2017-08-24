@@ -1,15 +1,12 @@
-﻿using Discord;
-using Discord.Commands;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Commands;
 using VKDiscordBot.Services;
 
 namespace VKDiscordBot.Modules
 {
-    [Name("Settings")]
+	[Name("Settings")]
     public class SettingsModule : ModuleBase
     {
         private DataManager _data;
@@ -24,13 +21,13 @@ namespace VKDiscordBot.Modules
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task PrefixAsync(string prefix)
         {
-            _data.SetServerPrefix(Context.Guild, prefix);
+            _data.SetServerPrefix(Context.Guild.Id, prefix);
             var message = await ReplyAsync("", false, new EmbedBuilder
             {
                 Color = Color.Green,
                 Description = $"Prefix `{prefix}` installed",
             });
-            new Timer((s) => message.DeleteAsync(), null, _data.BotSettings.WaitingBeforeDeleteMessage, Timeout.Infinite);
+            new Timer((s) => message.DeleteAsync(), null, DataManager.BotSettings.WaitingBeforeDeleteMessage, Timeout.Infinite);
         }
 
         [Name("Prefix"), Command("prefix"), Alias("pref")]
@@ -40,7 +37,7 @@ namespace VKDiscordBot.Modules
             await ReplyAsync("", false, new EmbedBuilder
             {
                 Color = Color.Blue,
-                Description = $"Current prefix: `{_data.GetGuildPrefix(Context.Guild)}`",
+                Description = $"Current prefix: `{_data.GetGuildSettings(Context.Guild.Id).Prefix}`",
             });
         }
     }
