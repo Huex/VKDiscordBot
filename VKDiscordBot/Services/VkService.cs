@@ -1,19 +1,17 @@
-﻿using Discord;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
+using Discord;
+using Newtonsoft.Json;
 using VkNet;
 using VkNet.Enums.Filters;
 using VkNet.Model;
 using VkNet.Model.RequestParams;
-using VkNet.Utils.AntiCaptcha;
 
 namespace VKDiscordBot.Services
 {
-    public class VkService : BotServiceBase
+	public class VkService : BotServiceBase
     {
         private readonly VkApi _vkApi;
         private readonly string _pathToAuthParams;
@@ -22,9 +20,11 @@ namespace VKDiscordBot.Services
         public VkService(string pathToAuthParams)
         {
             _pathToAuthParams = pathToAuthParams;
-            _vkApi = new VkApi();
-            _vkApi.RequestsPerSecond = 10;
-        }
+			_vkApi = new VkApi
+			{
+				RequestsPerSecond = 10
+			};
+		}
 
         public bool IsAuthorized
         {

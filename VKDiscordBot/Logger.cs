@@ -1,12 +1,10 @@
-﻿using Discord;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
+using Discord;
 
 namespace VKDiscordBot
 {
-    public class Logger
+	public class Logger
     {
         public LogSeverity LogLevel { get; private set; }
 
