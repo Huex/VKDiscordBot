@@ -1,18 +1,20 @@
-﻿using Discord.Commands;
-using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
 using VKDiscordBot.Models;
 using VKDiscordBot.Modules;
 using VKDiscordBot.Services;
 
 namespace VKDiscordBot
 {
-    public class Program
+	public class Program
     {
-        static void Main(string[] args)
+		static void Main(string[] args)
         {
             new Program().MainAsync().GetAwaiter().GetResult();
         }
@@ -20,49 +22,39 @@ namespace VKDiscordBot
         private async Task MainAsync()
         {
             var data = new DataManager();
-            data.LoadBotSettings("Configurations/Settings.json");
-            var logger = new Logger(data.BotSettings.LogLevel);
-            data.Log += logger.Log;
-            data.LoadGuildsSettings("Configurations/Guilds/");
-            var client = new DiscordSocketClient(data.BotSettings.ToDiscordSocketConfig());
-            client.Log += logger.Log;
-            var tasker = new TaskManager();
-            tasker.Log += logger.Log;
-            var commands = new CommandService();
-            commands.Log += logger.Log;
+			data.LoadBotSettings("Settings.json");
+            var logger = new Logger(DataManager.BotSettings.LogLevel);
+			data.Log += logger.Log;
+			data.LoadGuildsSettings();
+            var client = new DiscordSocketClient(DataManager.BotSettings.DiscordSocketConfig());
+			client.Log += logger.Log;
+            var commandService = new CommandService();
+			commandService.Log += logger.Log;
 
-            await commands.AddModuleAsync<SettingsModule>();
-            await commands.AddModuleAsync<NotifyModule>();
-            // Команды добавить здесь
+            await commandService.AddModuleAsync<SettingsModule>();
+			await commandService.AddModuleAsync<NotifyModule>();
 
-            var vk = new VkService("Configurations/Secrets/VkAuthParams.json");
-            vk.Log += logger.Log;
-            await vk.AuthorizeAsync();
-            var notify = new NotifyService(client, vk, tasker, data);
-            notify.Log += logger.Log;
-            notify.AddGuildsNotifys();
-            // Создать сервисы здесь
+            var vkService = new VkService(DataManager.BotSettings.VkAuthFilePath);
+			vkService.Log += logger.Log;
+            var notifyService = new NotifyService(client, vkService, data);
+			notifyService.Log += logger.Log;
 
             var services = new ServiceCollection();
             services.AddSingleton(data);
-            services.AddSingleton(commands);
-            services.AddSingleton(vk);
-            services.AddSingleton(tasker);
-            services.AddSingleton(notify);
+            services.AddSingleton(commandService);
+            services.AddSingleton(vkService);
+			services.AddSingleton(notifyService);
 
-            // Сервисы добавить здесь
 
-            var commandHandler = new CommandHandler(client, services.BuildServiceProvider());
-            client.MessageReceived += commandHandler.HandleCommandAsync;
-            client.GuildAvailable += data.CheckGuildSettings;
-            client.Ready += () =>
-            {
-                notify.StartAsync().ConfigureAwait(false);
-                return Task.CompletedTask;
-            };
-            await client.LoginAsync(Discord.TokenType.Bot, File.ReadAllText("Configurations/Secrets/Token.txt"));
+			var eventHandler = new DiscordEventHandler(client, commandService, services.BuildServiceProvider());
+			client.MessageReceived += eventHandler.HandleCommandAsync;
+			client.GuildAvailable += eventHandler.GuildAvailable;
+			client.GuildUpdated += eventHandler.GuildUpdated;
+			client.Ready += eventHandler.ClientReady;
+
+            await client.LoginAsync(TokenType.Bot, File.ReadAllText(DataManager.BotSettings.TokenFilePath));
             await client.StartAsync();
             await Task.Delay(-1);
         }
-    }
+	}
 }
