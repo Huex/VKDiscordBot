@@ -1,0 +1,18 @@
+{
+  "DefaultPrefix": "hx!",
+  "WaitingBeforeDeleteMessage": 5000,
+  "LogLevel": 5,
+  "MessageCacheSize": 80,
+  "DefaultRetryMode": 13,
+  "ConnectionTimeout": 30000,
+  "HandlerTimeout": 3000,
+  "AlwaysDownloadUsers": false,
+  "GuildsSettingsDirectoryPath": "Configurations/Guilds/",
+  "VkAuthFilePath": "Configurations/Secrets/VkAuthParams.json",
+  "TokenFilePath": "Configurations/Secrets/Token.txt",
+  "NotifyDueTime": 2000,
+  "SentNotifyDelay": 10000,
+  "StartNotifyDelay": 10000,
+  "SentTextDelay": 3000,
+  "MessageTextLimit": 2000
+}
