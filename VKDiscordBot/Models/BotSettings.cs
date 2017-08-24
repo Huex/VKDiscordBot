@@ -1,12 +1,9 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace VKDiscordBot.Models
 {
-    public class BotSettings
+	public class BotSettings
     {
         public string DefaultPrefix { get; set; }
         public int WaitingBeforeDeleteMessage { get; set; }
@@ -17,7 +14,17 @@ namespace VKDiscordBot.Models
         public int? HandlerTimeout { get; set; }
         public bool AlwaysDownloadUsers { get; set; }
 
-        public DiscordSocketConfig ToDiscordSocketConfig()
+		public string GuildsSettingsDirectoryPath { get; set; }
+		public string VkAuthFilePath { get; set; }
+		public string TokenFilePath { get; set; }
+
+		public int NotifyDueTime { get; set; } = 2000;
+		public int SentNotifyDelay { get; set; } = 10000;
+		public int StartNotifyDelay { get; set; } = 10000;
+		public int SentTextDelay { get; set; } = 3000;
+		public int MessageTextLimit { get; set; } = 2000;
+
+		public DiscordSocketConfig DiscordSocketConfig()
         {
             return new DiscordSocketConfig
             {
