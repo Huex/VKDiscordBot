@@ -18,11 +18,14 @@ namespace VKDiscordBot.Models
 		public string VkAuthFilePath { get; set; }
 		public string TokenFilePath { get; set; }
 
-		public int NotifyDueTime { get; set; } = 2000;
-		public int SentNotifyDelay { get; set; } = 10000;
-		public int StartNotifyDelay { get; set; } = 10000;
-		public int SentTextDelay { get; set; } = 3000;
-		public int MessageTextLimit { get; set; } = 2000;
+		public int NotifyDueTime { get; set; }
+		public int SentNotifyDelay { get; set; }
+		public int StartNotifyDelay { get; set; }
+		public int SentTextDelay { get; set; }
+		public int MessageTextLimit { get; set; }
+
+		public int DefaultUpdatePeriod { get; set; }
+		public int DefaultSentPostsCount { get; set; }
 
 		public DiscordSocketConfig DiscordSocketConfig()
         {

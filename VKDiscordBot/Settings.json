@@ -14,5 +14,7 @@
   "SentNotifyDelay": 10000,
   "StartNotifyDelay": 10000,
   "SentTextDelay": 3000,
-  "MessageTextLimit": 2000
+  "MessageTextLimit": 2000,
+  "DefaultUpdatePeriod": 10,
+  "DefaultSentPostsCount": 10
 }
