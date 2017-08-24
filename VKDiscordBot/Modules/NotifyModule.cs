@@ -9,7 +9,7 @@ using VkNet.Model;
 
 namespace VKDiscordBot.Modules
 {
-	[Name("Notify"), Group("notify")]
+    [Name("Notify"), Group("notify")]
     public class NotifyModule : ModuleBase
     {
         private readonly NotifyService _notify;
@@ -21,25 +21,25 @@ namespace VKDiscordBot.Modules
             _vk = vk;
         }
 
-		[Name("Post"), Command("post")]
-		public async Task PostAsync(string domain)
-		{
-			await PostAsync(domain, $"<#{Context.Channel.Id}>", DataManager.BotSettings.DefaultUpdatePeriod, DataManager.BotSettings.DefaultSentPostsCount);
-		}
+        [Name("Post"), Command("post")]
+        public async Task PostAsync(string domain)
+        {
+            await PostAsync(domain, $"<#{Context.Channel.Id}>", DataManager.BotSettings.DefaultUpdatePeriod, DataManager.BotSettings.DefaultSentPostsCount);
+        }
 
-		[Name("Post"), Command("post")]
-		public async Task PostAsync(string domain, int period, int countPosts)
-		{
-			await PostAsync(domain, $"<#{Context.Channel.Id}>", period, countPosts);
-		}
+        [Name("Post"), Command("post")]
+        public async Task PostAsync(string domain, int period, int countPosts)
+        {
+            await PostAsync(domain, $"<#{Context.Channel.Id}>", period, countPosts);
+        }
 
-		[Name("Post"), Command("post")]
-		public async Task PostAsync(string domain, string channel)
-		{
-			await PostAsync(domain, channel, DataManager.BotSettings.DefaultUpdatePeriod, DataManager.BotSettings.DefaultSentPostsCount);
-		}
+        [Name("Post"), Command("post")]
+        public async Task PostAsync(string domain, string channel)
+        {
+            await PostAsync(domain, channel, DataManager.BotSettings.DefaultUpdatePeriod, DataManager.BotSettings.DefaultSentPostsCount);
+        }
 
-		[Name("Post"), Command("post")]
+        [Name("Post"), Command("post")]
         public async Task PostAsync(string domain, string channel, int period, int countPosts)
         {
             var group = _vk.ResolveScreeName(domain);
@@ -99,27 +99,27 @@ namespace VKDiscordBot.Modules
                 return;
             }
 
-			_notify.AddNotifyAndStart(Context.Guild.Id, new Notify()
-			{
-				LastSent = DateTime.Now,
-				LastCheck = DateTime.Now,
-				Info = new NotifyInfo
-				{
-					ChannelId = channelId,
-					Domain = domain,
-					SendsPerNotify = Convert.ToUInt16(countPosts),
-					UpdatePeriod = Convert.ToUInt16(period),
-					Type = NotifyType.Wall,
-					WithHeader = true,
-					Hidden = false,
-					WithAudio = true,
-					WithDocument = true,
-					WithMap = true,
-					WithPhoto = true,
-					WithPool = true,
-					WithText = true,
-					WithVideo = true
-				}
+            _notify.AddNotifyAndStart(Context.Guild.Id, new Notify()
+            {
+                LastSent = DateTime.Now,
+                LastCheck = DateTime.Now,
+                Info = new NotifyInfo
+                {
+                    ChannelId = channelId,
+                    Domain = domain,
+                    SendsPerNotify = Convert.ToUInt16(countPosts),
+                    UpdatePeriod = Convert.ToUInt16(period),
+                    Type = NotifyType.Wall,
+                    WithHeader = true,
+                    Hidden = false,
+                    WithAudio = true,
+                    WithDocument = true,
+                    WithMap = true,
+                    WithPhoto = true,
+                    WithPool = true,
+                    WithText = true,
+                    WithVideo = true
+                }
             });
 
             await ReplyAsync("", false, new EmbedBuilder

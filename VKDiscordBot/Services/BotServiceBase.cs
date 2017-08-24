@@ -4,7 +4,7 @@ using Discord;
 
 namespace VKDiscordBot.Services
 {
-	public abstract class BotServiceBase
+    public abstract class BotServiceBase
     {
         public event Func<LogMessage, Task> Log;
 

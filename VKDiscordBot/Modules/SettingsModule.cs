@@ -6,7 +6,7 @@ using VKDiscordBot.Services;
 
 namespace VKDiscordBot.Modules
 {
-	[Name("Settings")]
+    [Name("Settings")]
     public class SettingsModule : ModuleBase
     {
         private DataManager _data;

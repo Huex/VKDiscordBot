@@ -2,7 +2,7 @@
 
 namespace VKDiscordBot.Models
 {
-	public class GuildSettings
+    public class GuildSettings
     {
         public string Name { get; set; }
         public ulong GuildId { get; set; }

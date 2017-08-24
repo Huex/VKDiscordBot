@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace VKDiscordBot.Models
 {
-	public class RepetitiveTask
+    public class RepetitiveTask
     {
         public event Action<int> TaskStarted;
 

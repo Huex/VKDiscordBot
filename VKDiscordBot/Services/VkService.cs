@@ -11,7 +11,7 @@ using VkNet.Model.RequestParams;
 
 namespace VKDiscordBot.Services
 {
-	public class VkService : BotServiceBase
+    public class VkService : BotServiceBase
     {
         private readonly VkApi _vkApi;
         private readonly string _pathToAuthParams;
@@ -20,11 +20,11 @@ namespace VKDiscordBot.Services
         public VkService(string pathToAuthParams)
         {
             _pathToAuthParams = pathToAuthParams;
-			_vkApi = new VkApi
-			{
-				RequestsPerSecond = 10
-			};
-		}
+            _vkApi = new VkApi
+            {
+                RequestsPerSecond = 10
+            };
+        }
 
         public bool IsAuthorized
         {

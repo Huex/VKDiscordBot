@@ -8,18 +8,18 @@ using VKDiscordBot.Models;
 
 namespace VKDiscordBot.Services
 {
-	public class DataManager : BotServiceBase
+    public class DataManager : BotServiceBase
     {
-		private static List<GuildSettings> _guildsSettings;
+        private static List<GuildSettings> _guildsSettings;
 
-		public static BotSettings BotSettings { get; private set; }
-		internal ReadOnlyCollection<GuildSettings> GuildsSettings
-		{
-			get
-			{
-				return new ReadOnlyCollection<GuildSettings>(_guildsSettings);
-			}
-		}
+        public static BotSettings BotSettings { get; private set; }
+        internal ReadOnlyCollection<GuildSettings> GuildsSettings
+        {
+            get
+            {
+                return new ReadOnlyCollection<GuildSettings>(_guildsSettings);
+            }
+        }
 
         public void LoadBotSettings(string path)
         {
@@ -53,21 +53,21 @@ namespace VKDiscordBot.Services
             }
         }
 
-		public void AddGuildSettings(GuildSettings guildSettings)
-		{
-			if(!GuildSettingsExist(guildSettings.GuildId))
-			{
-				_guildsSettings.Add(guildSettings);
-				WriteGuildSettings(guildSettings);
-				RaiseLog(LogSeverity.Verbose, $"Added new guild settings. GuildId={guildSettings.GuildId}");
-			}
-			else
-			{
-				RaiseLog(LogSeverity.Warning, $"Guild settings already exist. GuildId={guildSettings.GuildId}");
-			}
-		}
+        public void AddGuildSettings(GuildSettings guildSettings)
+        {
+            if(!GuildSettingsExist(guildSettings.GuildId))
+            {
+                _guildsSettings.Add(guildSettings);
+                WriteGuildSettings(guildSettings);
+                RaiseLog(LogSeverity.Verbose, $"Added new guild settings. GuildId={guildSettings.GuildId}");
+            }
+            else
+            {
+                RaiseLog(LogSeverity.Warning, $"Guild settings already exist. GuildId={guildSettings.GuildId}");
+            }
+        }
 
-		internal void SetServerPrefix(ulong guildId, string prefix)
+        internal void SetServerPrefix(ulong guildId, string prefix)
         {
             var neededServer = _guildsSettings.Find(s => s.GuildId == guildId);
             if (neededServer != null)
@@ -104,15 +104,15 @@ namespace VKDiscordBot.Services
             }
         }
 
-		internal bool GuildSettingsExist(ulong guildId)
-		{
-			return _guildsSettings.Find(g => g.GuildId == guildId) != null;
-		}
+        internal bool GuildSettingsExist(ulong guildId)
+        {
+            return _guildsSettings.Find(g => g.GuildId == guildId) != null;
+        }
 
-		internal GuildSettings GetGuildSettings(ulong guildId)
-		{
-			return _guildsSettings.Find(g => g.GuildId == guildId);
-		}
+        internal GuildSettings GetGuildSettings(ulong guildId)
+        {
+            return _guildsSettings.Find(g => g.GuildId == guildId);
+        }
 
         private void WriteGuildSettings(GuildSettings settings)
         {

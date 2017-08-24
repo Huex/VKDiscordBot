@@ -4,7 +4,7 @@ using Discord;
 
 namespace VKDiscordBot
 {
-	public class Logger
+    public class Logger
     {
         public LogSeverity LogLevel { get; private set; }
 

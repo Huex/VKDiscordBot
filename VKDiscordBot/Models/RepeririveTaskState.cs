@@ -1,6 +1,6 @@
 ﻿namespace VKDiscordBot.Models
 {
-	public enum RepeririveTaskState
+    public enum RepeririveTaskState
     {
         TimerStopped = 0,
         WaitingTimerTrip = 1,
