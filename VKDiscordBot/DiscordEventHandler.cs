@@ -54,19 +54,22 @@ namespace VKDiscordBot
 
         internal Task ClientReady()
         {
-            _vkService.AuthorizeAsync().Wait();
-            if (_vkService.IsAuthorized)
+            _vkService.AuthorizeAsync().ContinueWith((t) =>
             {
-                _notifyService.AddGuildsNotifys();
-                _notifyService.StartAsync().ConfigureAwait(false);
-            }
+                if (_vkService.IsAuthorized)
+                {
+                    _notifyService.AddGuildsNotifys();
+                    _notifyService.StartAsync().ConfigureAwait(false);
+                }
+            });
+            
             return Task.CompletedTask;
         }
 
         internal Task HandleCommandAsync(SocketMessage arg)
         {
             var msg = arg as SocketUserMessage;
-            if (msg == null || msg?.Source != MessageSource.User)
+            if (msg == null || msg.Source != MessageSource.User)
             {
                 return Task.CompletedTask;
             }
@@ -95,7 +98,7 @@ namespace VKDiscordBot
                     List<GuildEmote> emotes = new List<GuildEmote>(context.Guild.Emotes);
                     if (emotes.Count != 0)
                     {
-                        message.AddReactionAsync(emotes[_random.Next(0, emotes.Count - 1)]);
+                        message.Channel.SendMessageAsync(emotes[_random.Next(0, emotes.Count - 1)].Url);
                     }
                 });
             }

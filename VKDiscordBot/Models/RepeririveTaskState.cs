@@ -2,8 +2,8 @@
 {
     public enum RepeririveTaskState
     {
-        TimerStopped = 0,
-        WaitingTimerTrip = 1,
+        Stopped = 0,
+        Waiting = 1,
         TaskStarted = 2
     }
 }

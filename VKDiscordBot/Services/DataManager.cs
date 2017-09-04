@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Text;
 using Discord;
 using Newtonsoft.Json;
 using VKDiscordBot.Models;
@@ -10,20 +11,16 @@ namespace VKDiscordBot.Services
 {
     public class DataManager : BotServiceBase
     {
+
+        private Encoding _textEncoding = Encoding.UTF8;
         private static List<GuildSettings> _guildsSettings;
 
-        public static BotSettings BotSettings { get; private set; }
-        internal ReadOnlyCollection<GuildSettings> GuildsSettings
-        {
-            get
-            {
-                return new ReadOnlyCollection<GuildSettings>(_guildsSettings);
-            }
-        }
+        internal static BotSettings BotSettings { get; private set; }
+        internal ReadOnlyCollection<GuildSettings> GuildsSettings => new ReadOnlyCollection<GuildSettings>(_guildsSettings);
 
         public void LoadBotSettings(string path)
         {
-            BotSettings = (BotSettings)JsonConvert.DeserializeObject(File.ReadAllText(path), typeof(BotSettings));         
+            BotSettings = (BotSettings)JsonConvert.DeserializeObject(File.ReadAllText(path, _textEncoding), typeof(BotSettings));         
         }
 
         public void LoadGuildsSettings()
@@ -34,7 +31,7 @@ namespace VKDiscordBot.Services
                 var filesPaths = Directory.GetFiles(BotSettings.GuildsSettingsDirectoryPath);
                 foreach (var filePath in filesPaths)
                 {
-                    var serverSettings = (GuildSettings)JsonConvert.DeserializeObject(File.ReadAllText(filePath), typeof(GuildSettings));
+                    var serverSettings = (GuildSettings)JsonConvert.DeserializeObject(File.ReadAllText(filePath, _textEncoding), typeof(GuildSettings));
                     if (serverSettings == null)
                     {
                         RaiseLog(LogSeverity.Warning, $"Can not read guild settings. Path={filePath}");
@@ -118,7 +115,7 @@ namespace VKDiscordBot.Services
         {
             try
             {
-                File.WriteAllText(BotSettings.GuildsSettingsDirectoryPath + settings.GuildId + ".json", JsonConvert.SerializeObject(settings));
+                File.WriteAllText(BotSettings.GuildsSettingsDirectoryPath + settings.GuildId + ".json", JsonConvert.SerializeObject(settings), _textEncoding);
                 RaiseLog(LogSeverity.Info, $"Guild settings successfully write. GuildId={settings.GuildId}");
             }
             catch (Exception exp)

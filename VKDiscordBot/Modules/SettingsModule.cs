@@ -22,11 +22,7 @@ namespace VKDiscordBot.Modules
         public async Task PrefixAsync(string prefix)
         {
             _data.SetServerPrefix(Context.Guild.Id, prefix);
-            var message = await ReplyAsync("", false, new EmbedBuilder
-            {
-                Color = Color.Green,
-                Description = $"Prefix `{prefix}` installed",
-            });
+            var message = await ReplyAsync($"Prefix `{prefix}` was set.");
             new Timer((s) => message.DeleteAsync(), null, DataManager.BotSettings.WaitingBeforeDeleteMessage, Timeout.Infinite);
         }
 
@@ -34,11 +30,7 @@ namespace VKDiscordBot.Modules
         [Summary("Displays the current prefix on the server")]
         public async Task PrefixAsync()
         {
-            await ReplyAsync("", false, new EmbedBuilder
-            {
-                Color = Color.Blue,
-                Description = $"Current prefix: `{_data.GetGuildSettings(Context.Guild.Id).Prefix}`",
-            });
+            await ReplyAsync($"{Context.User.Mention} current prefix: `{_data.GetGuildSettings(Context.Guild.Id).Prefix}`");
         }
     }
 }

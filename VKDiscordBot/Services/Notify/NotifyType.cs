@@ -2,7 +2,8 @@
 {
     public enum NotifyType
     {
-        Wall = 0,
-        NewsFeed = 1,
+        GroupWall = 0,
+        UserWall = 1,
+        Global = 2
     }
 }

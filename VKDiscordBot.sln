@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Blend for Visual Studio 15
-VisualStudioVersion = 15.0.26730.10
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.12
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VKDiscordBot", "VKDiscordBot\VKDiscordBot.csproj", "{64F70E55-00FD-467D-BFDC-9BE36889D82A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VKDiscordBot.Tests", "VKDiscordBot.Tests\VKDiscordBot.Tests.csproj", "{CD9F3D43-1D9E-475C-8487-EA8D446D1D7A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VKDiscordBot", "VKDiscordBot\VKDiscordBot.csproj", "{64F70E55-00FD-467D-BFDC-9BE36889D82A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +15,6 @@ Global
 		{64F70E55-00FD-467D-BFDC-9BE36889D82A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64F70E55-00FD-467D-BFDC-9BE36889D82A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{64F70E55-00FD-467D-BFDC-9BE36889D82A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CD9F3D43-1D9E-475C-8487-EA8D446D1D7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CD9F3D43-1D9E-475C-8487-EA8D446D1D7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CD9F3D43-1D9E-475C-8487-EA8D446D1D7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CD9F3D43-1D9E-475C-8487-EA8D446D1D7A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

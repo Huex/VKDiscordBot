@@ -23,7 +23,7 @@ namespace VKDiscordBot
             var logger = new Logger(DataManager.BotSettings.LogLevel);
             data.Log += logger.Log;
             data.LoadGuildsSettings();
-            var client = new DiscordSocketClient(DataManager.BotSettings.DiscordSocketConfig());
+            var client = new DiscordSocketClient(DataManager.BotSettings.DiscordSocketConfig);
             client.Log += logger.Log;
             var commandService = new CommandService();
             commandService.Log += logger.Log;

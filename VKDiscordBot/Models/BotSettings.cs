@@ -19,28 +19,35 @@ namespace VKDiscordBot.Models
         public string TokenFilePath { get; set; }
 
         public int NotifyDueTime { get; set; }
+
         public int SentNotifyDelay { get; set; }
         public int StartNotifyDelay { get; set; }
+        public int BetweenSentTextDelay { get; set; }
+        public int BetweenSentPhotosDelay { get; set; }
+        public int BeforePhotoDelay { get; set; }
+        public int SentAudioDelay { get; set; }
         public int SentTextDelay { get; set; }
-        public int BetweenSentPhotosDelay { get; internal set; }
-        public int BeforePhotoDelay { get; internal set; }
+        public int SentHeaderDelay { get; set; }
+
         public int MessageTextLimit { get; set; }
 
         public int DefaultUpdatePeriod { get; set; }
         public int DefaultSentPostsCount { get; set; }
 
-
-        public DiscordSocketConfig DiscordSocketConfig()
+        public DiscordSocketConfig DiscordSocketConfig
         {
-            return new DiscordSocketConfig
+            get
             {
-                LogLevel = LogLevel,
-                MessageCacheSize = MessageCacheSize,
-                DefaultRetryMode = DefaultRetryMode,
-                ConnectionTimeout = ConnectionTimeout,
-                HandlerTimeout = HandlerTimeout,
-                AlwaysDownloadUsers = AlwaysDownloadUsers
-            };
+                return new DiscordSocketConfig
+                {
+                    LogLevel = LogLevel,
+                    MessageCacheSize = MessageCacheSize,
+                    DefaultRetryMode = DefaultRetryMode,
+                    ConnectionTimeout = ConnectionTimeout,
+                    HandlerTimeout = HandlerTimeout,
+                    AlwaysDownloadUsers = AlwaysDownloadUsers
+                };
+            }
         }
     }
 }

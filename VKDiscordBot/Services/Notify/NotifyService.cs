@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using VKDiscordBot.Models;
+using VkNet.Enums.Filters;
 using VkNet.Enums.SafetyEnums;
 using VkNet.Model;
 using VkNet.Model.Attachments;
@@ -18,14 +19,82 @@ namespace VKDiscordBot.Services
         private readonly DiscordSocketClient _client;
         private readonly DataManager _data;
 
-        private List<NotifyTask> _notifys;
+        private Dictionary<ulong, List<NotifyTask>> _notifys;
 
         public NotifyService(DiscordSocketClient client, VkService vk, DataManager data)
         {
             _vk = vk ?? throw new ArgumentNullException(nameof(vk));
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _data = data ?? throw new ArgumentNullException(nameof(data));
-            _notifys = new List<NotifyTask>();
+            _notifys = new Dictionary<ulong, List<NotifyTask>>();
+        }
+
+        public List<NotifyTask> GetNotifys(ulong guildId)
+        {
+            return _notifys.ContainsKey(guildId) ? _notifys[guildId] : new List<NotifyTask>();
+        }
+
+        public bool NotifyExist(int taskId)
+        {
+            foreach (var guildNotifys in _notifys)
+            {
+                if (guildNotifys.Value.Find(t => t.Id == taskId) != null)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool NotifyExist(ulong guildId, int taskId)
+        {
+            if (_notifys.ContainsKey(guildId))
+            {
+                    if (_notifys[guildId].Find(t => t.Id == taskId) != null)
+                    {
+                        return true;
+                    }
+            }
+            return false;
+        }
+
+        public void RemoveNotify(int taskId)
+        {
+            foreach(var guildNotifys in _notifys)
+            {
+                var task = guildNotifys.Value.Find(t => t.Id == taskId);
+                if(task != null)
+                {
+                    var index = guildNotifys.Value.IndexOf(task);
+                    guildNotifys.Value[index].Stop();
+                    guildNotifys.Value[index].Dispose();
+                    guildNotifys.Value.RemoveAt(index);
+                    var guild = _data.GetGuildSettings(guildNotifys.Key);
+                    guild.Notifys.Remove(guild.Notifys.Find(n => n.Info == task.Info));
+                    _data.UpdateGuildSettings(guildNotifys.Key, guild);
+                    task.Dispose();
+                    break;
+                }               
+            }
+        }
+
+        public void RemoveNotify(ulong guildId, int taskId)
+        {
+            if (_notifys.ContainsKey(guildId))
+            {
+                var task = _notifys[guildId].Find(t => t.Id == taskId);
+                if (task != null)
+                {
+                    var index = _notifys[guildId].IndexOf(task);
+                    _notifys[guildId][index].Stop();
+                    _notifys[guildId][index].Dispose();
+                    _notifys[guildId].RemoveAt(index);
+                    var guild = _data.GetGuildSettings(guildId);
+                    guild.Notifys.Remove(guild.Notifys.Find(n => n.Info == task.Info));
+                    _data.UpdateGuildSettings(guildId, guild);
+                    task.Dispose();
+                }
+            }             
         }
 
         public void AddNotifyAndStart(ulong guildId, Notify notify)
@@ -48,11 +117,25 @@ namespace VKDiscordBot.Services
             var notifyHashCode = guild.Notifys[guild.Notifys.IndexOf(notify)].GetHashCode();
             var task = new NotifyTask(() =>
             {
+                if(_client.ConnectionState != ConnectionState.Connected)
+                {
+                    RaiseLog(LogSeverity.Warning, $"No connection to perform notify task.");
+                    return;                  
+                }
                 var newNotifyEntry = guild.Notifys.Find(n => n.GetHashCode() == notifyHashCode);
+                if(newNotifyEntry.Info.SourceId == null)
+                {
+                    var obj = _vk.ResolveScreeName(newNotifyEntry.Info.SourceDomain);
+                    newNotifyEntry.Info.SourceId = obj.Id;
+                    if (obj.Type == VkNet.Enums.VkObjectType.Group)
+                    {
+                        newNotifyEntry.Info.SourceId *= -1;
+                    }
+                }
                 var posts = CheckWallPosts(newNotifyEntry);
                 if (posts.Count != 0)
                 {
-                    SentNotify(posts, newNotifyEntry.Info);
+                    var typingState = ((SocketTextChannel)_client.GetChannel(notify.Info.ChannelId)).EnterTypingState();
                     DateTime? newLastSent = newNotifyEntry.LastSent;
                     posts.ForEach((post) => newLastSent = newLastSent < post.Date ? post.Date : newLastSent);
                     newNotifyEntry.LastCheck = DateTime.Now;
@@ -61,22 +144,28 @@ namespace VKDiscordBot.Services
                     guild.Notifys.Add(newNotifyEntry);
                     notifyHashCode = newNotifyEntry.GetHashCode();
                     _data.UpdateGuildSettings(guild.GuildId, guild);
+                    SentNotify(posts, newNotifyEntry.Info);
+                    typingState.Dispose();
                 }
             }, notify.Info, DataManager.BotSettings.NotifyDueTime, notify.Info.UpdatePeriod * MILLISECONDS_PER_MINUTE);
-            task.TaskStarted += (id) =>
+            task.TaskStarted += (t) =>
             {
-                RaiseLog(LogSeverity.Debug, $"Notify task started. TaskId={id}");
+                RaiseLog(LogSeverity.Debug, $"Notify task started. TaskId={t.Id}");
             };
-            task.TaskEnded += (id, result) =>
+            task.TaskEnded += (t, result) =>
             {
                 var severety = LogSeverity.Debug;
                 if (result == TaskStatus.Canceled || result == TaskStatus.Faulted)
                 {
                     severety = LogSeverity.Warning;
                 }
-                RaiseLog(severety, $"Notify task ended. TaslId={id} Resulr={result.ToString()}");
+                RaiseLog(severety, $"Notify task ended. TaskId={t.Id} Result={result.ToString()}");
             };
-            _notifys.Add(task);
+            if (!_notifys.ContainsKey(guild.GuildId))
+            {
+                _notifys.Add(guild.GuildId, new List<NotifyTask>());
+            }
+            _notifys[guild.GuildId].Add(task);
             RaiseLog(LogSeverity.Debug, $"Added notify task. GuildId={guild.GuildId}");
         }
 
@@ -93,22 +182,26 @@ namespace VKDiscordBot.Services
 
         public async Task StartAsync()
         {
-            foreach (var task in _notifys)
+            foreach (var guildNotifys in _notifys)
             {
-                _notifys.Find(t => t.Id == task.Id).Start();
-                await Task.Delay(DataManager.BotSettings.StartNotifyDelay);
+                foreach(var notify in guildNotifys.Value)
+                {
+                    notify.Start();
+                    await Task.Delay(DataManager.BotSettings.StartNotifyDelay);
+                }
             }
         }
 
         private List<Post> CheckWallPosts(Notify notify)
         {
             List<Post> posts = new List<Post>();
+
             if (notify.Info.SearchString == null)
             {
                 posts = _vk.GetWallPosts(new WallGetParams
                 {
                     Count = Convert.ToUInt64(notify.Info.SendsPerNotify),
-                    Domain = notify.Info.Domain
+                    OwnerId = notify.Info.SourceId
                 });
             }
             else
@@ -116,13 +209,14 @@ namespace VKDiscordBot.Services
                 posts = _vk.WallPostsSearch(new WallSearchParams
                 {
                     Count = Convert.ToInt64(notify.Info.SendsPerNotify),
-                    Domain = notify.Info.Domain,
+                    OwnerId = notify.Info.SourceId,
                     Query = notify.Info.SearchString
                 });
             }
+            
             posts.RemoveAll(p => p.Date <= notify.LastSent);
             posts.Reverse();
-            RaiseLog(LogSeverity.Debug, $"WallPosts checked. Domain={notify.Info.Domain} PostsCount={posts.Count}");
+            RaiseLog(LogSeverity.Debug, $"WallPosts checked. Domain={notify.Info.SourceDomain} PostsCount={posts.Count}");
             return posts;
         }
 
@@ -131,16 +225,23 @@ namespace VKDiscordBot.Services
             return $"{_vk.Domain}wall{post.OwnerId}_{post.Id}";
         }
 
-        private string[] ToDivide(string text, double maxTextLength)
+        private string[] ToDivideText(string text, double maxTextLength)
         {
             var needMessageCount = (int)Math.Ceiling((double)text.Length / DataManager.BotSettings.MessageTextLimit);
-            var blockLength = text.Length / needMessageCount;
-            string[] textBlocks = new string[needMessageCount];
-            for (int i = 0,j=0; i < text.Length && j < needMessageCount; i += blockLength,j++)
+            if(needMessageCount != 0)
             {
-                textBlocks[j] = (text.Substring(i, text.Length - i > blockLength ? blockLength : text.Length - i));
+                var blockLength = text.Length / needMessageCount;
+                string[] textBlocks = new string[needMessageCount];
+                for (int i = 0, j = 0; i < text.Length && j < needMessageCount; i += blockLength, j++)
+                {
+                    textBlocks[j] = (text.Substring(i, text.Length - i > blockLength ? blockLength : text.Length - i));
+                }
+                return textBlocks;
             }
-            return textBlocks;
+            else
+            {
+                return new string[0];
+            }           
         }
 
         private Uri GetMaxImageUri(Photo photo)
@@ -155,20 +256,171 @@ namespace VKDiscordBot.Services
             return uri;
         }
 
+        private void SentPhotoUris(ISocketMessageChannel channel, List<object> photos)
+        {
+            string[] links = new string[photos.Count];
+            int index = 0;
+            foreach (Photo photo in photos)
+            {
+                links[index] = GetMaxImageUri(photo).ToString();
+                index++;
+            }
+            if (links.Length <= 5)
+            {
+                channel.SendMessageAsync(String.Join(Environment.NewLine, links)).Wait();
+            }
+            else
+            {
+                string[] firstmsg = new string[5];
+                string[] secondmsg = new string[links.Length - 5];
+                for (int i = 0; i < links.Length; i++)
+                {
+                    if (i < 5)
+                    {
+                        firstmsg[i] = links[i];
+                    }
+                    else
+                    {
+                        secondmsg[i - 5] = links[i];
+                    }
+                }
+                channel.SendMessageAsync(String.Join(Environment.NewLine, firstmsg)).Wait();
+                Task.Delay(DataManager.BotSettings.BetweenSentPhotosDelay).Wait();
+                channel.SendMessageAsync(String.Join(Environment.NewLine, secondmsg)).Wait();
+            }
+            Task.Delay(DataManager.BotSettings.BeforePhotoDelay).Wait();
+        }
+
+        private void SentText(ISocketMessageChannel channel, string text)
+        {
+            foreach (var textBlock in ToDivideText(text, DataManager.BotSettings.MessageTextLimit))
+            {
+                channel.SendMessageAsync(textBlock).Wait();
+                Task.Delay(DataManager.BotSettings.BetweenSentTextDelay).Wait();
+            }
+            Task.Delay(DataManager.BotSettings.SentTextDelay).Wait();
+        }
+
+        private void SentAudioNames(ISocketMessageChannel channel, List<object> audios)
+        {
+            var sentText = "";
+            foreach(Audio audio in audios)
+            {
+                sentText += $"🎵   {audio.Artist} - {audio.Title}" + Environment.NewLine;
+            }
+            if(sentText != "")
+            {
+                channel.SendMessageAsync(sentText).Wait();
+                Task.Delay(DataManager.BotSettings.SentAudioDelay).Wait();
+            }
+        }
+
+        private Embed GetHeader(Post post, NotifyInfo notify, User user)
+        {
+            var embed = new EmbedBuilder
+            {
+                ThumbnailUrl = user.Photo200.ToString(),
+                Author = new EmbedAuthorBuilder
+                {
+                    Name = user.FirstName + " " + user.LastName,
+                    Url = _vk.Domain + notify.SourceDomain
+                },
+                Timestamp = post.Date.Value,
+                Title = "Link to post",
+                Url = _vk.Domain + "wall" + post.OwnerId + "_" + post.Id
+            };
+            embed.AddField(new EmbedFieldBuilder
+            {
+                IsInline = true,
+                Name = "Likes",
+                Value = post.Likes == null ? 0 : post.Likes.Count
+            });
+            embed.AddField(new EmbedFieldBuilder
+            {
+                IsInline = true,
+                Name = "Reposts",
+                Value = post.Reposts == null ? 0 : post.Reposts.Count
+            });
+            embed.AddField(new EmbedFieldBuilder
+            {
+                IsInline = true,
+                Name = "Comments",
+                Value = post.Comments == null ? 0 : post.Comments.Count
+            });
+            embed.AddField(new EmbedFieldBuilder
+            {
+                IsInline = true,
+                Name = "Views",
+                Value = post.Views == null ? 0 : post.Views.Count
+            });
+            return embed.Build();
+        }
+
+        private Embed GetHeader(Post post, NotifyInfo notify, Group group)
+        {
+            var embed = new EmbedBuilder
+            {
+                ThumbnailUrl = group.Photo200.ToString(),
+                Author = new EmbedAuthorBuilder
+                {
+                    Name = group.Name,
+                    Url = _vk.Domain + notify.SourceDomain
+                },
+                Timestamp = post.Date.Value,
+                Title = "Link to post",
+                Url = _vk.Domain + "wall" + post.OwnerId + "_" + post.Id
+            };
+            embed.AddField(new EmbedFieldBuilder
+            {
+                IsInline = true,
+                Name = "Likes",
+                Value = post.Likes == null ? 0 : post.Likes.Count
+            });
+            embed.AddField(new EmbedFieldBuilder
+            {
+                IsInline = true,
+                Name = "Reposts",
+                Value = post.Reposts == null ? 0 : post.Reposts.Count
+            });
+            embed.AddField(new EmbedFieldBuilder
+            {
+                IsInline = true,
+                Name = "Comments",
+                Value = post.Comments == null ? 0 : post.Comments.Count
+            });
+            embed.AddField(new EmbedFieldBuilder
+            {
+                IsInline = true,
+                Name = "Views",
+                Value = post.Views == null ? 0 : post.Views.Count
+            });
+            return embed.Build();
+        }
+
         //TODO: доделать мг
         private void SentNotify(List<Post> posts, NotifyInfo notify)
         {
             if (posts.Count == 0)
             {
                 return;
-            }
-
+            }           
             var channel = _client.GetChannel(notify.ChannelId) as ISocketMessageChannel;
             foreach (var post in posts)
             {
                 if (notify.WithHeader)
-                {
-                    // здесь типо шапку оотправлять надо, данные о группе или посте
+                {   
+                    if(notify.Type == NotifyType.GroupWall)
+                    {
+                        var group = _vk.GetGroup((long)posts[0].OwnerId, GroupsFields.AllUndocumented);
+                        channel.SendMessageAsync(notify.Comment ?? "", false, GetHeader(post, notify, group)).Wait();
+                    }
+                    if (notify.Type == NotifyType.UserWall)
+                    {
+                        var user = _vk.GetUser((long)posts[0].OwnerId, ProfileFields.Photo200);
+                        channel.SendMessageAsync(notify.Comment ?? "", false, GetHeader(post, notify, user)).Wait();
+                    }
+
+                    Task.Delay(DataManager.BotSettings.SentHeaderDelay).Wait();
                 }
 
                 if (post.PostType == PostType.Post)
@@ -186,10 +438,22 @@ namespace VKDiscordBot.Services
 
                     if (notify.WithText)
                     {
-                        foreach (var textBlock in ToDivide(post.Text, DataManager.BotSettings.MessageTextLimit))
+                        SentText(channel, post.Text);
+                    }
+
+                    if (notify.WithAudio)
+                    {
+                        if (attachments.ContainsKey(typeof(Audio)))
                         {
-                            channel.SendMessageAsync(textBlock).Wait();
-                            Task.Delay(DataManager.BotSettings.SentTextDelay).Wait();
+                            SentAudioNames(channel, attachments[typeof(Audio)]);
+                        }
+                    }
+
+                    if (notify.WithDocument)
+                    {
+                        if (attachments.ContainsKey(typeof(Document)))
+                        {
+                            SentDocuments(channel, attachments[typeof(Document)]);
                         }
                     }
 
@@ -197,39 +461,11 @@ namespace VKDiscordBot.Services
                     {
                         if (attachments.ContainsKey(typeof(Photo)))
                         {
-                            string[] links = new string[attachments[typeof(Photo)].Count];
-                            int index = 0;
-                            foreach(Photo photo in attachments[typeof(Photo)])
-                            {
-                                links[index] = GetMaxImageUri(photo).ToString();
-                                index++;
-                            }
-                            if(links.Length <= 5)
-                            {
-                                channel.SendMessageAsync(String.Join(Environment.NewLine, links)).Wait();
-                            }
-                            else
-                            {
-                                string[] firstmsg = new string[5];
-                                string[] secondmsg = new string[links.Length - 5];
-                                for(int i = 0; i< links.Length; i++)
-                                {
-                                    if (i < 5)
-                                    {
-                                        firstmsg[i] = links[i];
-                                    }
-                                    else
-                                    {
-                                        secondmsg[i - 5] = links[i];
-                                    }
-                                }
-                                channel.SendMessageAsync(String.Join(Environment.NewLine, firstmsg)).Wait();
-                                Task.Delay(DataManager.BotSettings.BetweenSentPhotosDelay).Wait();
-                                channel.SendMessageAsync(String.Join(Environment.NewLine, secondmsg)).Wait();
-                            }
-                            Task.Delay(DataManager.BotSettings.BeforePhotoDelay).Wait();
+                            SentPhotoUris(channel, attachments[typeof(Photo)]);
                         }
                     }
+
+                    
 
 
                     //var links = GetLinks(post.Attachments);
@@ -250,11 +486,15 @@ namespace VKDiscordBot.Services
                     //    channel.SendMessageAsync($"{String.Join("\n", secondLinks)}").Wait();
                     //}
                     //Task.Delay(5000).Wait();
-
-                    Task.Delay(DataManager.BotSettings.SentNotifyDelay).Wait();
-                }                
+                }
+                Task.Delay(DataManager.BotSettings.SentNotifyDelay).Wait();
             }
-            RaiseLog(LogSeverity.Debug, $"Posts notifyed. Domain={notify.Domain} ChannelId={notify.ChannelId} PostsCount={posts.Count}");
+            RaiseLog(LogSeverity.Debug, $"Posts notifyed. Domain={notify.SourceDomain} ChannelId={notify.ChannelId} PostsCount={posts.Count}");
+        }
+
+        private void SentDocuments(ISocketMessageChannel channel, List<object> list)
+        {
+            throw new NotImplementedException();
         }
     }
 }

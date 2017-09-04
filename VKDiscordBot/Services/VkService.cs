@@ -11,11 +11,18 @@ using VkNet.Model.RequestParams;
 
 namespace VKDiscordBot.Services
 {
-    public class VkService : BotServiceBase
+    public class VkService : BotServiceBase, IDisposable
     {
         private readonly VkApi _vkApi;
         private readonly string _pathToAuthParams;
+
         public readonly string Domain = "https://vk.com/";
+        public bool IsAuthorized => _vkApi.IsAuthorized;
+
+        public void Dispose()
+        {
+            _vkApi.Dispose();
+        }
 
         public VkService(string pathToAuthParams)
         {
@@ -24,14 +31,6 @@ namespace VKDiscordBot.Services
             {
                 RequestsPerSecond = 10
             };
-        }
-
-        public bool IsAuthorized
-        {
-            get
-            {
-               return _vkApi.IsAuthorized;
-            }
         }
 
         public List<Post> GetWallPosts(WallGetParams prms)
@@ -61,7 +60,7 @@ namespace VKDiscordBot.Services
         public Group GetGroup(long id, GroupsFields fields)
         {
             RaiseLog(LogSeverity.Debug, "GetGroup request");
-            return _vkApi.Groups.GetById(new string[] { id.ToString() }, id.ToString(), fields)[0]; 
+            return _vkApi.Groups.GetById(-id, fields); 
         }
 
         public VkObject ResolveScreeName(string screeName)
@@ -83,6 +82,5 @@ namespace VKDiscordBot.Services
             }
             RaiseLog(Discord.LogSeverity.Info, "Authorized");
         }
-
     }
 }
